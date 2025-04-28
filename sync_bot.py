@@ -88,10 +88,6 @@ async def on_ready():
         print(key)
         # Try to match by name + start time
         discord_event = existing_events_dict.get(key)
-        print("YOUR DISCORD EVENT")
-        print(discord_event)
-        print("EXISTING EVENTS")
-        print(existing_events_dict)
 
         if discord_event:
             # If found, check if event metadata changed (e.g., description, end time)
