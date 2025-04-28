@@ -60,38 +60,70 @@ def fetch_google_calendar_events():
 @client.event
 async def on_ready():
     print(f'Logged in as {client.user}')
-    
+
     print("Bot is in the following guilds:")
     for guild in client.guilds:
         print(f"Guild: {guild.name} | ID: {guild.id}")
-    
-    # Fetch the guild object using the env var ID
+
     guild = discord.utils.get(client.guilds, id=DISCORD_GUILD_ID)
     if not guild:
         print(f"Could not find guild with ID: {DISCORD_GUILD_ID}")
+        await client.close()
         return
 
-    # Fetch events from Google Calendar
     events = fetch_google_calendar_events()
     if not events:
         print("No events found.")
+        await client.close()
         return
 
-    # Loop through the fetched events and create Discord scheduled events
+    # Fetch all existing scheduled events from Discord
+    existing_events = await guild.fetch_scheduled_events()
+    existing_events_dict = {(event.name, event.start_time): event for event in existing_events}
+
+    # Loop through Google Calendar events
     for event in events:
-        try:
-            scheduled_event = await guild.create_scheduled_event(
-                name=event['summary'],
-                start_time=event['start'],
-                end_time=event['end'],
-                description=f"Synced from Google Calendar: {event['summary']}",
-                entity_type=discord.EntityType.external,
-                location="TBD",
-                privacy_level=discord.PrivacyLevel.guild_only
-            )
-            print(f"Created event: {scheduled_event.name}")
-        except Exception as e:
-            print(f"Failed to create event: {e}")
+        key = (event['summary'].replace("\r", ""), event['start'])
+        print("YOUR KEY")
+        print(key)
+        # Try to match by name + start time
+        discord_event = existing_events_dict.get(key)
+        print("YOUR DISCORD EVENT")
+        print(discord_event)
+        print("EXISTING EVENTS")
+        print(existing_events_dict)
+
+        if discord_event:
+            # If found, check if event metadata changed (e.g., description, end time)
+            if (discord_event.end_time != event['end'] or
+                discord_event.description != f"Synced from Google Calendar: {event['summary']}"):
+
+                # Update event if changed
+                try:
+                    await discord_event.edit(
+                        end_time=event['end'],
+                        description=f"Synced from Google Calendar: {event['summary']}"
+                    )
+                    print(f"Updated event: {discord_event.name}")
+                except Exception as e:
+                    print(f"Failed to update event: {e}")
+            else:
+                print(f"No changes needed for event: {discord_event.name}")
+        else:
+            # If not found, create a new event
+            try:
+                scheduled_event = await guild.create_scheduled_event(
+                    name=event['summary'],
+                    start_time=event['start'],
+                    end_time=event['end'],
+                    description=f"Synced from Google Calendar: {event['summary']}",
+                    entity_type=discord.EntityType.external,
+                    location="TBD",
+                    privacy_level=discord.PrivacyLevel.guild_only
+                )
+                print(f"Created event: {scheduled_event.name}")
+            except Exception as e:
+                print(f"Failed to create event: {e}")
 
     await client.close()
 
