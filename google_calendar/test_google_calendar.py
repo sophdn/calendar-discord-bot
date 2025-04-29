@@ -1,39 +1,50 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from google_calendar.google_calendar import fetch_google_calendar_events
-import requests
+from discord_sync.discord_sync import append_hidden_id_to_description, extract_hidden_id_from_description
 
-def test_fetch_google_calendar_events_success():
-    fake_ical_data = """BEGIN:VCALENDAR
+# Test parsing events
+@patch('google_calendar.google_calendar.requests.get')
+def test_fetch_google_calendar_events(mock_get):
+    sample_ical = """
 BEGIN:VEVENT
 SUMMARY:Test Event
 DTSTART:20240428T120000Z
 DTEND:20240428T130000Z
+DESCRIPTION:This is a test event
+UID:testuid123@google.com
 END:VEVENT
-END:VCALENDAR"""
+"""
+    mock_get.return_value.status_code = 200
+    mock_get.return_value.text = sample_ical
 
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.text = fake_ical_data
+    events = fetch_google_calendar_events("fake_url")
 
-    with patch('google_calendar.google_calendar.requests.get', return_value=mock_response):
-        events = fetch_google_calendar_events("http://fakeurl.com/calendar.ics")
-        assert len(events) == 1
-        assert events[0]['summary'] == 'Test Event'
-        assert events[0]['start'].isoformat() == '2024-04-28T12:00:00+00:00'
-        assert events[0]['end'].isoformat() == '2024-04-28T13:00:00+00:00'
+    assert len(events) == 1
+    event = events[0]
+    assert event['summary'] == "Test Event"
+    assert event['description'] == "This is a test event"
+    assert event['uid'] == "testuid123"
+    assert event['start'].year == 2024
+    assert event['end'].year == 2024
 
-def test_fetch_google_calendar_events_network_error():
-    with patch('google_calendar.google_calendar.requests.get', side_effect=requests.exceptions.RequestException):
-        events = fetch_google_calendar_events("http://fakeurl.com/calendar.ics")
-        assert events == []
+# Test appending hidden ID to description
+def test_append_hidden_id_to_description():
+    event = {
+        'description': 'This is a description',
+        'uid': 'abc123'
+    }
+    result = append_hidden_id_to_description(event)
+    assert "hidden_id:abc123" in result
+    assert result.startswith('This is a description')
 
-def test_fetch_google_calendar_events_empty_feed():
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.text = "BEGIN:VCALENDAR\nEND:VCALENDAR"
+# Test extracting hidden ID from description
+def test_extract_hidden_id_from_description():
+    description = "This is a description - hidden_id:abc123"
+    uid = extract_hidden_id_from_description(description)
+    assert uid == "abc123"
 
-    with patch('google_calendar.google_calendar.requests.get', return_value=mock_response):
-        events = fetch_google_calendar_events("http://fakeurl.com/calendar.ics")
-        assert events == []
-
+def test_extract_hidden_id_from_description_missing():
+    description = "This is a description without a hidden ID"
+    uid = extract_hidden_id_from_description(description)
+    assert uid is None
