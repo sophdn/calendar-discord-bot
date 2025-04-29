@@ -25,5 +25,11 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
 
+      - name: Create dummy .env for tests
+        run: |
+          echo "DISCORD_BOT_TOKEN=dummy_token" >> .env
+          echo "DISCORD_GUILD_ID=123456789012345678" >> .env
+          echo "ICAL_URL=https://example.com/calendar.ics" >> .env
+
       - name: Run tests
         run: pytest
