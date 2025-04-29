@@ -1,8 +1,8 @@
 import discord
 from discord.ext import tasks
-from config import load_config
-from google_calendar import fetch_google_calendar_events
-from discord_sync import sync_events
+from bot_config.bot_config import load_config
+from google_calendar.google_calendar import fetch_google_calendar_events
+from discord_sync.discord_sync import sync_events
 
 # Load configuration
 config = load_config()
