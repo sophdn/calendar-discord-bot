@@ -1,7 +1,10 @@
 import requests
 from datetime import datetime
+from custom_logger.custom_logger import get_logger
 
 def fetch_google_calendar_events(ical_url):
+    logger = get_logger()
+
     try:
         response = requests.get(ical_url)
         response.raise_for_status()
@@ -11,8 +14,6 @@ def fetch_google_calendar_events(ical_url):
         if 'BEGIN:VEVENT' in feed:
             event_data = feed.split('BEGIN:VEVENT')[1:]
             for event in event_data:
-                print("YOUR EVENT PRE-PROCESSED")
-                print(event)
                 summary = event.split('SUMMARY:')[1].split('\n')[0]
                 start_time = event.split('DTSTART:')[1].split('\n')[0].strip()
                 end_time = event.split('DTEND:')[1].split('\n')[0].strip()
@@ -32,9 +33,7 @@ def fetch_google_calendar_events(ical_url):
                     'description': description,
                     'uid': uid
                 })
-        print("YOUR EVENTS")
-        print(events)
         return events
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching calendar events: {e}")
+        logger.exception(f"Error fetching calendar events: {e}")
         return []

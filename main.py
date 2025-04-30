@@ -18,13 +18,13 @@ async def on_ready():
 
     guild = discord.utils.get(client.guilds, id=config["DISCORD_GUILD_ID"])
     if not guild:
-        print(f"Could not find guild with ID: {config['DISCORD_GUILD_ID']}")
+        logger.info(f"Could not find guild with ID: {config['DISCORD_GUILD_ID']}")
         await client.close()
         return
 
     events = fetch_google_calendar_events(config["ICAL_URL"])
     if not events:
-        print("No events found.")
+        logger.info("No events found.")
         await client.close()
         return
 

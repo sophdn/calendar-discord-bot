@@ -1,9 +1,11 @@
 import discord
 from discord.ext import tasks
+from custom_logger.custom_logger import get_logger
 
 async def sync_events(guild, events, existing_events_dict):
     # Build a set of current Google Calendar UIDs
     google_uids = set(event['uid'] for event in events)
+    logger = get_logger()
 
     for event in events:
         key = event['uid']
@@ -18,11 +20,11 @@ async def sync_events(guild, events, existing_events_dict):
                         start_time=event['start'],
                         description=append_hidden_id_to_description(event)
                     )
-                    print(f"Updated event: {event['uid']}")
+                    logger.info(f"Updated event: {event['uid']}")
                 except Exception as e:
-                    print(f"Failed to update event: {e}")
+                    logger.info(f"Failed to update event: {e}")
             else:
-                print(f"No changes needed for event: {event['uid']}")
+                logger.info(f"No changes needed for event: {event['uid']}")
         else:
             try:
                 await guild.create_scheduled_event(
@@ -34,18 +36,18 @@ async def sync_events(guild, events, existing_events_dict):
                     location="TBD",
                     privacy_level=discord.PrivacyLevel.guild_only
                 )
-                print(f"Created event: {event['uid']}")
+                logger.info(f"Created event: {event['uid']}")
             except Exception as e:
-                print(f"Failed to create event: {e}")
+                logger.info(f"Failed to create event: {e}")
 
     # 🗑️ Delete orphaned Discord events
     for uid, discord_event in existing_events_dict.items():
         if uid not in google_uids:
             try:
                 await discord_event.delete()
-                print(f"Deleted event not found in Google Calendar: {uid}")
+                logger.info(f"Deleted event not found in Google Calendar: {uid}")
             except Exception as e:
-                print(f"Failed to delete event {uid}: {e}")
+                logger.info(f"Failed to delete event {uid}: {e}")
 
 
 def extract_hidden_id_from_description(description):
