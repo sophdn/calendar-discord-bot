@@ -92,4 +92,4 @@ def extract_hidden_id_from_description(description):
     return None
 
 def append_hidden_id_to_description(event):
-    return f"{event['description']} - hidden_id:{event['uid']}"
+    return f"{event['description']} - \n-# hidden_id:{event['uid']}"
