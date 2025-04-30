@@ -142,3 +142,33 @@ def test_extract_hidden_id_from_description_none():
     description = "This event has no hidden ID."
     uid = extract_hidden_id_from_description(description)
     assert uid is None
+
+@pytest.mark.asyncio
+async def test_event_with_none_gcal_description():
+    mock_guild = AsyncMock()
+    mock_discord_event = AsyncMock()
+    mock_discord_event.start_time = "start"
+    mock_discord_event.end_time = "end"
+    mock_discord_event.name = "Event Name"
+    mock_discord_event.description = "Description that will be overwritten - hidden_id:uid123"
+
+    mock_existing_events_dict = {
+        "uid123": mock_discord_event
+    }
+
+    events = [{
+        'summary': 'Event Name',
+        'start': 'start',
+        'end': 'end',
+        'description': None,  # This is the key edge case
+        'uid': 'uid123'
+    }]
+
+    await sync_events(mock_guild, events, mock_existing_events_dict)
+
+    mock_discord_event.edit.assert_awaited_once_with(
+        name='Event Name',
+        start_time='start',
+        end_time='end',
+        description=append_hidden_id_to_description(events[0])
+    )
