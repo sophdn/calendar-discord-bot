@@ -82,7 +82,7 @@ def main():
             try:
                 await bot.start(config["DISCORD_BOT_TOKEN"])
             except Exception as e:
-                logger.exception("Failed to start bot for CLI sync.")
+                logger.exception("Failed to start bot for CLI sync")
 
         asyncio.run(runner())
     else:
