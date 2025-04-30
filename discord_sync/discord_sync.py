@@ -2,6 +2,9 @@ import discord
 from discord.ext import tasks
 
 async def sync_events(guild, events, existing_events_dict):
+    # Build a set of current Google Calendar UIDs
+    google_uids = set(event['uid'] for event in events)
+
     for event in events:
         key = event['uid']
         discord_event = existing_events_dict.get(key)
@@ -34,6 +37,15 @@ async def sync_events(guild, events, existing_events_dict):
                 print(f"Created event: {event['uid']}")
             except Exception as e:
                 print(f"Failed to create event: {e}")
+
+    # 🗑️ Delete orphaned Discord events
+    for uid, discord_event in existing_events_dict.items():
+        if uid not in google_uids:
+            try:
+                await discord_event.delete()
+                print(f"Deleted event not found in Google Calendar: {uid}")
+            except Exception as e:
+                print(f"Failed to delete event {uid}: {e}")
 
 
 def extract_hidden_id_from_description(description):

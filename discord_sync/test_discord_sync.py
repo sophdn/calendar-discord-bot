@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock
 import discord
-from discord_sync.discord_sync import sync_events, append_hidden_id_to_description
+from discord_sync.discord_sync import sync_events, append_hidden_id_to_description, extract_hidden_id_from_description
 
 @pytest.mark.asyncio
 async def test_existing_event_needs_update():
@@ -106,3 +106,39 @@ async def test_edit_event_exception_handling(capfd):
 
     out, _ = capfd.readouterr()
     assert "Failed to update event" in out
+
+@pytest.mark.asyncio
+async def test_delete_orphaned_event():
+    mock_guild = AsyncMock()
+    mock_discord_event = AsyncMock()
+    mock_discord_event.delete = AsyncMock()
+
+    mock_existing_events_dict = {
+        "orphanuid789": mock_discord_event
+    }
+    # No matching UID in events → should delete
+    events = []
+
+    await sync_events(mock_guild, events, mock_existing_events_dict)
+
+    mock_discord_event.delete.assert_awaited_once()
+
+def test_append_hidden_id_to_description():
+    event = {
+        'description': 'Cool party',
+        'uid': 'abc123'
+    }
+    result = append_hidden_id_to_description(event)
+    assert result == 'Cool party - hidden_id:abc123'
+
+
+def test_extract_hidden_id_from_description():
+    description = "Join us at the party!\nSome info here\n - hidden_id:abc123"
+    uid = extract_hidden_id_from_description(description)
+    assert uid == "abc123"
+
+
+def test_extract_hidden_id_from_description_none():
+    description = "This event has no hidden ID."
+    uid = extract_hidden_id_from_description(description)
+    assert uid is None
