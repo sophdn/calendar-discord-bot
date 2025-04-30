@@ -2,9 +2,6 @@ import os
 from dotenv import load_dotenv
 
 def load_config():
-    if not load_dotenv():
-        raise FileNotFoundError("Missing .env file")
-
     ical_url = os.getenv('GOOGLE_ICAL_URL')
     discord_bot_token = os.getenv('DISCORD_BOT_TOKEN')
     discord_guild_id = os.getenv('DISCORD_GUILD_ID')
