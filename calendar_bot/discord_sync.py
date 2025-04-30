@@ -25,11 +25,17 @@ def event_needs_update(discord_event, gcal_event):
         discord_value = str(discord_value).strip()
         gcal_value = str(gcal_value).strip()
 
+        logger.info(f"YOUR DISCORD FIELD: {discord_field}")
+        logger.info(f"YOUR DISCORD VALUE: {discord_value}")
+        logger.info(f"YOUR GCAL VALUE: {gcal_value}")
+
         if discord_field == "description":
+            logger.info("IN THE DESCRIPTION HANDLER")
             discord_value = strip_hidden_id(discord_value)
             gcal_value = strip_hidden_id(gcal_value)
 
         if discord_value != gcal_value:
+            logger.info("DESCRIPTIONS DO NOT MATCH")
             return True
     return False
 
