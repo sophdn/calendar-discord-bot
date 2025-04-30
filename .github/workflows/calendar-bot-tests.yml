@@ -33,4 +33,4 @@ jobs:
           echo "ICAL_URL=https://example.com/calendar.ics" >> .env
 
       - name: Run tests
-        run: pytest
+        run: PYTHONPATH=. pytest
