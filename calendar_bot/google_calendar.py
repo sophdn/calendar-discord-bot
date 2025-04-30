@@ -1,6 +1,6 @@
 import requests
 from datetime import datetime
-from custom_logger.custom_logger import get_logger
+from calendar_bot.custom_logger import get_logger
 
 def fetch_google_calendar_events(ical_url):
     logger = get_logger()

@@ -1,9 +1,9 @@
 import discord
 from discord.ext import tasks
-from bot_config.bot_config import load_config
-from google_calendar.google_calendar import fetch_google_calendar_events
-from discord_sync.discord_sync import sync_events, extract_hidden_id_from_description
-from custom_logger.custom_logger import get_logger
+from calendar_bot.bot_config import load_config
+from calendar_bot.google_calendar import fetch_google_calendar_events
+from calendar_bot.discord_sync import sync_events, extract_hidden_id_from_description
+from calendar_bot.custom_logger import get_logger
 
 config = load_config()
 intents = discord.Intents.default()

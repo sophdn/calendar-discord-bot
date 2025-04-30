@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock
 import discord
-from discord_sync.discord_sync import sync_events, append_hidden_id_to_description, extract_hidden_id_from_description
+from calendar_bot.discord_sync import sync_events, append_hidden_id_to_description, extract_hidden_id_from_description
 
 @pytest.mark.asyncio
 async def test_existing_event_needs_update():

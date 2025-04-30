@@ -1,6 +1,6 @@
 import discord
 from discord.ext import tasks
-from custom_logger.custom_logger import get_logger
+from calendar_bot.custom_logger import get_logger
 
 async def sync_events(guild, events, existing_events_dict):
     # Build a set of current Google Calendar UIDs
