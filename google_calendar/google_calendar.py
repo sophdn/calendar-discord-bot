@@ -16,7 +16,10 @@ def fetch_google_calendar_events(ical_url):
                 summary = event.split('SUMMARY:')[1].split('\n')[0]
                 start_time = event.split('DTSTART:')[1].split('\n')[0].strip()
                 end_time = event.split('DTEND:')[1].split('\n')[0].strip()
-                description = event.split('DESCRIPTION:')[1].split('\n')[0].strip()
+                if 'DESCRIPTION:' in event:
+                    description = event.split('DESCRIPTION:')[1].split('\n')[0].strip()
+                else:
+                    description = ""
                 uid = event.split('UID:')[1].split('\n')[0].split('@google.com')[0].strip()
 
                 start_datetime = datetime.strptime(start_time, '%Y%m%dT%H%M%S%z')
