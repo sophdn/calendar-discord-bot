@@ -129,7 +129,7 @@ def test_append_hidden_id_to_description():
         'uid': 'abc123'
     }
     result = append_hidden_id_to_description(event)
-    assert result == 'Cool party - hidden_id:abc123'
+    assert result == 'Cool party - \n-# hidden_id:abc123'
 
 
 def test_extract_hidden_id_from_description():
