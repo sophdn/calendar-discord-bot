@@ -1,10 +1,10 @@
 import pytest
 from unittest.mock import patch
-from google_calendar.google_calendar import fetch_google_calendar_events
-from discord_sync.discord_sync import append_hidden_id_to_description, extract_hidden_id_from_description
+from calendar_bot.google_calendar import fetch_google_calendar_events
+from calendar_bot.discord_sync import append_hidden_id_to_description, extract_hidden_id_from_description
 
 # Test parsing events
-@patch('google_calendar.google_calendar.requests.get')
+@patch('calendar_bot.google_calendar.requests.get')
 def test_fetch_google_calendar_events(mock_get):
     sample_ical = """
 BEGIN:VEVENT

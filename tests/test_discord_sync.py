@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock
 import discord
-from discord_sync.discord_sync import sync_events, append_hidden_id_to_description, extract_hidden_id_from_description
+from calendar_bot.discord_sync import sync_events, append_hidden_id_to_description, extract_hidden_id_from_description
 
 @pytest.mark.asyncio
 async def test_existing_event_needs_update():
@@ -82,7 +82,7 @@ async def test_create_new_event():
     )
 
 @pytest.mark.asyncio
-async def test_edit_event_exception_handling(capfd):
+async def test_edit_event_exception_handling(caplog):
     mock_guild = AsyncMock()
     mock_discord_event = AsyncMock()
     mock_discord_event.start_time = "old_start"
@@ -101,11 +101,11 @@ async def test_edit_event_exception_handling(capfd):
         'description': 'Updated description',
         'uid': 'testuid123'
     }]
-    
-    await sync_events(mock_guild, events, mock_existing_events_dict)
 
-    out, _ = capfd.readouterr()
-    assert "Failed to update event" in out
+    with caplog.at_level("INFO", logger="calendar_bot"):
+        await sync_events(mock_guild, events, mock_existing_events_dict)
+
+    assert any("Failed to update event" in message for message in caplog.messages)
 
 @pytest.mark.asyncio
 async def test_delete_orphaned_event():

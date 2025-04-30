@@ -1,7 +1,7 @@
 import pytest
 import os
 from unittest.mock import patch
-from bot_config.bot_config import load_config
+from calendar_bot.bot_config import load_config
 
 def test_load_config_success():
     with patch.dict(os.environ, {
