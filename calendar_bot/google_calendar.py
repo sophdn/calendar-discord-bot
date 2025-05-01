@@ -5,7 +5,6 @@ from calendar_bot.bot_config import load_config
 from calendar_bot.custom_logger import get_logger
 from calendar_bot.discord_sync import sync_events, extract_hidden_id_from_description
 
-config = load_config()
 logger = get_logger()
 
 def fetch_google_calendar_events(ical_url):
@@ -50,6 +49,7 @@ async def run_calendar_sync(bot):
         logger.info("Waiting for bot to become ready...")
         await bot.wait_until_ready()
 
+    config = load_config()
     logger.info("Bot is ready. Fetching guild...")
     guild = discord.utils.get(bot.guilds, id=config["DISCORD_GUILD_ID"])
     if not guild:

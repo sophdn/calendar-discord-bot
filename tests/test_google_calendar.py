@@ -52,18 +52,18 @@ def test_extract_hidden_id_from_description_missing():
 
 # Async test for run_calendar_sync
 @pytest.mark.asyncio
+@patch('calendar_bot.google_calendar.load_config', return_value={
+    'DISCORD_GUILD_ID': 1234567890,
+    'ICAL_URL': 'http://fake.url/ical.ics'
+})
 @patch('calendar_bot.google_calendar.sync_events', new_callable=AsyncMock)
 @patch('calendar_bot.google_calendar.fetch_google_calendar_events')
 @patch('calendar_bot.google_calendar.discord.utils.get')
-async def test_run_calendar_sync(mock_get_guild, mock_fetch_events, mock_sync_events):
+async def test_run_calendar_sync(mock_get_guild, mock_fetch_events, mock_sync_events, mock_load_config):
     # Create a fake bot with is_ready and wait_until_ready
     mock_bot = MagicMock()
     mock_bot.is_ready.return_value = True
     mock_bot.guilds = [MagicMock(id=1234567890, name="Test Guild")]
-
-    # Simulate the config's GUILD_ID matching the mocked guild
-    from calendar_bot import google_calendar
-    google_calendar.config["DISCORD_GUILD_ID"] = 1234567890
 
     # Create fake calendar events
     mock_event = {
