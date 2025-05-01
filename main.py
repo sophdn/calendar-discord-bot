@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 from calendar_bot.bot_config import load_config
 from calendar_bot.google_calendar import fetch_google_calendar_events
 from calendar_bot.discord_sync import sync_events, extract_hidden_id_from_description
@@ -15,9 +16,10 @@ intents.messages = True
 intents.guilds = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
-
-# Flag for whether we're running a CLI-triggered sync
 RUNNING_CLI_SYNC = len(sys.argv) > 1 and sys.argv[1] == "sync"
+
+# Create a command tree for slash commands
+tree = bot.tree
 
 
 async def run_calendar_sync():
@@ -29,7 +31,6 @@ async def run_calendar_sync():
         await bot.wait_until_ready()
 
     logger.info("Bot is ready. Fetching guild...")
-
     guild = discord.utils.get(bot.guilds, id=config["DISCORD_GUILD_ID"])
     if not guild:
         logger.warning(f"Could not find guild with ID: {config['DISCORD_GUILD_ID']}")
@@ -57,6 +58,12 @@ async def run_calendar_sync():
 async def on_ready():
     logger.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
 
+    try:
+        synced = await tree.sync(guild=discord.Object(id=config["DISCORD_GUILD_ID"]))
+        logger.info(f"Synced {len(synced)} command(s) to guild {config['DISCORD_GUILD_ID']}")
+    except Exception as e:
+        logger.exception("Failed to sync application commands")
+
     if RUNNING_CLI_SYNC:
         try:
             await run_calendar_sync()
@@ -67,16 +74,16 @@ async def on_ready():
             await bot.close()
 
 
-@bot.command(name="sync")
-async def sync_command(ctx):
-    """Command to sync calendar from Discord."""
-    logger.info(f"Received !sync command from {ctx.author}")
+@tree.command(name="sync", description="Sync Google Calendar events to Discord", guild=discord.Object(id=config["DISCORD_GUILD_ID"]))
+async def slash_sync(interaction: discord.Interaction):
+    logger.info(f"Received /sync command from {interaction.user}")
+    await interaction.response.defer(thinking=True)
     try:
         await run_calendar_sync()
-        await ctx.send("Sync complete!")
+        await interaction.followup.send("✅ Sync complete!")
     except Exception as e:
-        logger.exception("Error during !sync command.")
-        await ctx.send("Sync failed. Check logs for details.")
+        logger.exception("Error during /sync command.")
+        await interaction.followup.send("❌ Sync failed. Check logs for details.")
 
 
 def main():
