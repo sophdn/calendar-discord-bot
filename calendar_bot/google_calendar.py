@@ -1,10 +1,14 @@
 import requests
+import discord
 from datetime import datetime
+from calendar_bot.bot_config import load_config
 from calendar_bot.custom_logger import get_logger
+from calendar_bot.discord_sync import sync_events, extract_hidden_id_from_description
+
+config = load_config()
+logger = get_logger()
 
 def fetch_google_calendar_events(ical_url):
-    logger = get_logger()
-
     try:
         response = requests.get(ical_url)
         response.raise_for_status()
@@ -37,3 +41,34 @@ def fetch_google_calendar_events(ical_url):
     except requests.exceptions.RequestException as e:
         logger.exception(f"Error fetching calendar events: {e}")
         return []
+
+async def run_calendar_sync(bot):
+    """Core sync logic for both CLI and Discord command."""
+    logger.info("Starting calendar sync...")
+
+    if not bot.is_ready():
+        logger.info("Waiting for bot to become ready...")
+        await bot.wait_until_ready()
+
+    logger.info("Bot is ready. Fetching guild...")
+    guild = discord.utils.get(bot.guilds, id=config["DISCORD_GUILD_ID"])
+    if not guild:
+        logger.warning(f"Could not find guild with ID: {config['DISCORD_GUILD_ID']}")
+        return
+
+    logger.info(f"Found guild: {guild.name} (ID: {guild.id})")
+    events = fetch_google_calendar_events(config["ICAL_URL"])
+    if not events:
+        logger.info("No events found in calendar.")
+        return
+
+    logger.info(f"Fetched {len(events)} events from calendar.")
+    existing_events = await guild.fetch_scheduled_events()
+    existing_events_dict = {
+        extract_hidden_id_from_description(event.description): event
+        for event in existing_events
+    }
+
+    logger.info(f"Found {len(existing_events_dict)} existing scheduled events.")
+    await sync_events(guild, events, existing_events_dict)
+    logger.info("Calendar sync complete.")
